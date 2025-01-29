@@ -1,9 +1,7 @@
 DataObject Parser
 =================
 
-[![Join the chat at https://gitter.im/Gigzolo/dataobject-parser](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/Gigzolo/dataobject-parser?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-[![Build Status](https://travis-ci.org/Gigzolo/dataobject-parser.png?branch=master)](https://travis-ci.org/Gigzolo/dataobject-parser)
+[![Node.js CI](https://github.com/henrytseng/dataobject-parser/actions/workflows/node.js.yml/badge.svg)](https://github.com/henrytseng/dataobject-parser/actions/workflows/node.js.yml)
 
 A nodejs module designed to parse an Object hash transposing between dot-notation and a structured heirarchy of Objects/Arrays.  
 
@@ -42,7 +40,7 @@ The Object returned should be the equivalent structured object:
 
 	var obj = d.data();
 
-That is, where ```obj``` is equivalent to:
+That is, where `obj` is equivalent to:
 
 	var obj = {
 		caravan:{
@@ -56,7 +54,7 @@ That is, where ```obj``` is equivalent to:
 		}
 	};
 
-```transpose()``` and ```untranspose()``` methods can transform the data between the two formats (e.g. - An Object hash with properties using dot-notation and a heirchy structured Object or Object(s)/Arrays(s))
+`transpose()` and `untranspose()` methods can transform the data between the two formats (e.g. - An Object hash with properties using dot-notation and a heirchy structured Object or Object(s)/Arrays(s))
 
 	flat = DataObjectParser.untranspose(structured)
 
@@ -88,7 +86,7 @@ Where the equivalent results would be:
 		record: 'Beetles'
 	};
 
-Please take a look at the test: ```test/utils-dataobject-parser.js``` for more code examples.  
+Please take a look at the test: `test/utils-dataobject-parser.js` for more code examples.  
 
 ## Contributors
 
@@ -102,7 +100,7 @@ Please take a look at the test: ```test/utils-dataobject-parser.js``` for more c
 
 The MIT License (MIT)
 
-Copyright (c) 2014 Gigzolo Inc.
+Copyright (c) 2024 Canvas Digital LLC.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 

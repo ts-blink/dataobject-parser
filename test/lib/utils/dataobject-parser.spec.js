@@ -1,16 +1,41 @@
 'use strict';
 
 var should = require('should');
+var assert = require('assert');
 var _ = require('lodash');
 
-var DataObjectParser = require('../lib/utils/dataobject-parser');
+var DataObjectParser = require(process.cwd()+'/lib/utils/dataobject-parser');
 
 describe('DataObjectParser', function(){
 
   describe('test:unit',function(){
 
-/*-------------Set-------------*/
     describe('#set',function(){
+      it('should prevent prototype pollution', function($done) {
+        var parser = new DataObjectParser();
+    
+        // Attempt to pollute the prototype
+        (function() {
+          parser.set('__proto__.polluted', true);
+        }).should.throw('Prototype pollution attempt detected');
+
+        // Check that the prototype was not polluted
+        should.not.exist({}.polluted);
+        $done();
+      });
+      
+      it('Should accomplish the same as setting internal values with object literals', function($done) {
+        var d = new DataObjectParser();
+        d.set('$a.b.c', 'Cabin');
+        d.set('a_b.b.c', 'Syrup');
+
+        var result = d.data();
+
+        result.should.be.an.instanceof(Object).and.have.property("$a");
+        result.should.be.an.instanceof(Object).and.have.property("a_b");
+        $done();
+      });
+
       it('Should accomplish the same as setting internal values with object literals', function($done) {
         var d = new DataObjectParser();
         d.set('caravan.personel.leader', 'Travis');
@@ -158,8 +183,32 @@ describe('DataObjectParser', function(){
       });
     });
 
-/*-------------Get-------------*/
     describe('#get',function(){
+      it('Should differentiate between null and undefined values', function($done) {
+        var d = new DataObjectParser();
+        d.set('abc', null);
+
+        var result = d.data();
+
+        assert.ok(d.get("abc") == null)
+        assert.ok(typeof(d.get("def")) == 'undefined')
+        $done();
+      });
+    });
+
+    describe('#get',function(){
+      it('Should accomplish the same as setting internal values with object literals', function($done) {
+        var d = new DataObjectParser();
+        d.set('$a.b.c', 'Cabin');
+        d.set('a_b.b.c', 'Syrup');
+
+        var result = d.data();
+
+        d.get("$a.b.c").should.equal("Cabin");
+        d.get("a_b.b.c").should.equal("Syrup");
+        $done();
+      });
+
       it('Should get the value associated with a given key in an object',function($done){
         var d = new DataObjectParser();
 
@@ -233,7 +282,6 @@ describe('DataObjectParser', function(){
       });
     });
 
-/*-------------Transpose-------------*/
     describe('#transpose',function(){
       it('Should take flat data and return structured DataObjectParser',function($done){
         var flat = {
@@ -254,7 +302,7 @@ describe('DataObjectParser', function(){
       });
       it("Should create a structured data with one key from 'location.name'",function($done){
         var flat = {
-          'city["location.name"]': "Grandma house",
+          'city["location.name"]': "Grandma house"
         };
 
         var structured={
@@ -288,7 +336,7 @@ describe('DataObjectParser', function(){
         var date = new Date(2014,0,1);
 
         var flat = {
-          'info': date,
+          'info': date
         };
 
         var structured={
@@ -307,18 +355,33 @@ describe('DataObjectParser', function(){
       });
 
       it("Should create a structured data with one key from 'metadata.foo|bar'",function($done){
-          var flat = {
-              'metadata.foo|bar': 'some-text'
-          };
-          var structured={
-              _data:{
-                  metadata: {
-                    'foo|bar': 'some-text'
-                  }
-              }
-          };
-          DataObjectParser.transpose(flat).should.eql(structured);
-          $done();
+        var flat = {
+            'metadata.foo|bar': 'some-text'
+        };
+        var structured={
+            _data:{
+                metadata: {
+                  'foo|bar': 'some-text'
+                }
+            }
+        };
+        DataObjectParser.transpose(flat).should.eql(structured);
+        $done();
+      });
+
+      it("Should create a structured data with one key from 'metadata.foo:bar'",function($done){
+        var flat = {
+            'metadata.foo:bar': 'some-text'
+        };
+        var structured={
+            _data:{
+                metadata: {
+                  'foo:bar': 'some-text'
+                }
+            }
+        };
+        DataObjectParser.transpose(flat).should.eql(structured);
+        $done();
       });
 
       it("Should create a structured data with one key from 'metadata.foo_bar'",function($done){
@@ -337,7 +400,6 @@ describe('DataObjectParser', function(){
       });
     });
 
-/*-------------Untranspose-------------*/
     describe('#untranspose',function(){
       it("Should handle a DataObjectParser or an object",function($done){
         var structured = {
@@ -475,7 +537,35 @@ describe('DataObjectParser', function(){
           'location.city.name': 'House on cliff',
           'location.city.geo': '45, 23',
           "location.rooms[0]": "kitchen",
-          "location.rooms[1]": "bathroom",
+          "location.rooms[1]": "bathroom"
+        };
+
+        DataObjectParser.untranspose(structured).should.eql(flat);
+        $done();
+      });
+
+      it("Should take a structured object containing array multiple items and return a flat DataObjectParser",function($done){
+        var structured = {
+          tracking: true,
+          blocked: true,
+          nsfw: false,
+          categories: {
+            subscribed: [ 'xag2vJYrDJdsyZfah', 'abpxCb6pN3aR4piMw' ],
+            blocked: []
+          },
+          sources: {
+            subscribed: [ '4QSh8AqECuPauHFor' ],
+            blocked: []
+          }
+        };
+
+        var flat = {
+          'tracking': true,
+          'blocked': true,
+          'nsfw': false,
+          'categories.subscribed[0]': 'xag2vJYrDJdsyZfah',
+          'categories.subscribed[1]': 'abpxCb6pN3aR4piMw',
+          'sources.subscribed[0]': '4QSh8AqECuPauHFor'
         };
 
         DataObjectParser.untranspose(structured).should.eql(flat);
@@ -503,7 +593,7 @@ describe('DataObjectParser', function(){
           'location.city.geo': '45, 23',
           "location.rooms[0].name": "kitchen",
           "location.rooms[0].purpose": "cooking",
-          "location.rooms[1]": "bathroom",
+          "location.rooms[1]": "bathroom"
         };
 
         DataObjectParser.untranspose(structured).should.eql(flat);
@@ -537,7 +627,7 @@ describe('DataObjectParser', function(){
 
         var flat={
           'info["a.b"][0]["c.d"][0]["g.h"]':"Hello",
-          'info["a.b"][1]["e.f"][0]["i.j"]':"There",
+          'info["a.b"][1]["e.f"][0]["i.j"]':"There"
         };
 
         DataObjectParser.untranspose(structured).should.eql(flat);
@@ -672,7 +762,22 @@ describe('DataObjectParser', function(){
         };
 
         var flat={
-          'metadata.foo|bar': "some-text",
+          'metadata.foo|bar': "some-text"
+        };
+
+        DataObjectParser.untranspose(structured).should.eql(flat);
+        $done();
+      });
+
+      it('Should handle colons in naming correctly as part of a variable name',function($done){
+        var structured={
+          metadata:{
+            'b:c': 'some-text'
+          }
+        };
+
+        var flat={
+          'metadata.b:c': "some-text"
         };
 
         DataObjectParser.untranspose(structured).should.eql(flat);
@@ -687,7 +792,24 @@ describe('DataObjectParser', function(){
         };
 
         var flat={
-          'metadata.foo_bar': "some-text",
+          'metadata.foo_bar': "some-text"
+        };
+
+        DataObjectParser.untranspose(structured).should.eql(flat);
+        $done();
+      });
+
+      it('Should handle "$" correctly as part of a variable name',function($done){
+        var structured={
+          metadata:{
+            'foo_$bar': 'some-text',
+            'foo_bar': 'some-other-text'
+          }
+        };
+
+        var flat={
+          'metadata.foo_$bar': "some-text",
+          'metadata.foo_bar': "some-other-text"
         };
 
         DataObjectParser.untranspose(structured).should.eql(flat);
